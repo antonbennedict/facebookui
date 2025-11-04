@@ -1,5 +1,5 @@
-const API_BASE = 'https://facebookui-ujb5.onrender.com/api/posts'
 
+export const API_URL = 'https://facebookui-ujb5.onrender.com/api/posts'
 
 async function handleResponse(res) {
   const contentType = res.headers.get('content-type') || ''
@@ -13,18 +13,18 @@ async function handleResponse(res) {
   return data
 }
 
-export const fetchPosts = async () => {
-  const res = await fetch(API_BASE)
+export const fetchPosts = async (url = API_URL) => {
+  const res = await fetch(url)
   return handleResponse(res)
 }
 
-export const fetchPost = async (id) => {
-  const res = await fetch(`${API_BASE}/${id}`)
+export const fetchPost = async (url = API_URL, id) => {
+  const res = await fetch(`${url}/${id}`)
   return handleResponse(res)
 }
 
-export const createPost = async (post) => {
-  const res = await fetch(API_BASE, {
+export const createPost = async (url = API_URL, post) => {
+  const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(post)
@@ -32,8 +32,8 @@ export const createPost = async (post) => {
   return handleResponse(res)
 }
 
-export const updatePost = async (id, post) => {
-  const res = await fetch(`${API_BASE}/${id}`, {
+export const updatePost = async (url = API_URL, id, post) => {
+  const res = await fetch(`${url}/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(post)
@@ -41,8 +41,8 @@ export const updatePost = async (id, post) => {
   return handleResponse(res)
 }
 
-export const patchPost = async (id, partial) => {
-  const res = await fetch(`${API_BASE}/${id}`, {
+export const patchPost = async (url = API_URL, id, partial) => {
+  const res = await fetch(`${url}/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(partial)
@@ -50,7 +50,7 @@ export const patchPost = async (id, partial) => {
   return handleResponse(res)
 }
 
-export const deletePost = async (id) => {
-  const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' })
+export const deletePost = async (url = API_URL, id) => {
+  const res = await fetch(`${url}/${id}`, { method: 'DELETE' })
   return handleResponse(res)
 }
