@@ -1,34 +1,30 @@
-// Define base API URL — can come from your .env (VITE_API_BASE) or fallback to '/api/posts'
-const API_BASE = import.meta.env.VITE_API_BASE || '/api'
-const url = `https://facebookui-ujb5.onrender.com/`  // 👈 now all post APIs use this
+const API_BASE = 'https://facebookui-ujb5.onrender.com/api/posts'
+
 
 async function handleResponse(res) {
   const contentType = res.headers.get('content-type') || ''
   const data = contentType.includes('application/json') ? await res.json() : null
-
   if (!res.ok) {
     const err = new Error((data && (data.message || data.error)) || res.statusText || 'API error')
     err.status = res.status
     err.data = data
     throw err
   }
-
   return data
 }
 
-// === Posts API ===
 export const fetchPosts = async () => {
-  const res = await fetch(url)
+  const res = await fetch(API_BASE)
   return handleResponse(res)
 }
 
 export const fetchPost = async (id) => {
-  const res = await fetch(`${url}/${id}`)
+  const res = await fetch(`${API_BASE}/${id}`)
   return handleResponse(res)
 }
 
 export const createPost = async (post) => {
-  const res = await fetch(url, {
+  const res = await fetch(API_BASE, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(post)
@@ -37,7 +33,7 @@ export const createPost = async (post) => {
 }
 
 export const updatePost = async (id, post) => {
-  const res = await fetch(`${url}/${id}`, {
+  const res = await fetch(`${API_BASE}/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(post)
@@ -46,7 +42,7 @@ export const updatePost = async (id, post) => {
 }
 
 export const patchPost = async (id, partial) => {
-  const res = await fetch(`${url}/${id}`, {
+  const res = await fetch(`${API_BASE}/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(partial)
@@ -55,6 +51,6 @@ export const patchPost = async (id, partial) => {
 }
 
 export const deletePost = async (id) => {
-  const res = await fetch(`${url}/${id}`, { method: 'DELETE' })
+  const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' })
   return handleResponse(res)
 }
