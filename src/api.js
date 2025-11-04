@@ -1,67 +1,142 @@
-const API_BASE = 'https://facebookui-ujb5.onrender.com/api/posts'
+import React, { useEffect, useState } from 'react'
+import {
+  fetchPosts,
+  createPost,
+  updatePost,
+  patchPost,
+  deletePost
+} from './api'
+import PostList from './components/PostList'
+import PostForm from './components/PostForm'
 
-async function handleResponse(res) {
-  const contentType = res.headers.get('content-type') || ''
-  const data = contentType.includes('application/json') ? await res.json() : null
-  if (!res.ok) {
-    // Try to get message or error, fallback to statusText or generic message
-    const errMsg = (data && (data.message || data.error)) || res.statusText || 'API error'
-    const err = new Error(errMsg)
-    err.status = res.status
-    err.data = data
-    throw err
+export default function App() {
+  const [posts, setPosts] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [editing, setEditing] = useState(null) // post being edited
+
+  const load = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await fetchPosts()
+      if (Array.isArray(data)) {
+        data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        setPosts(data)
+      } else {
+        setError('Invalid data from API')
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to load posts')
+    } finally {
+      setLoading(false)
+    }
   }
-  return data
-}
 
-export const fetchPosts = async () => {
-  const res = await fetch(API_BASE, {
-    mode: 'cors'
-  })
-  return handleResponse(res)
-}
+  useEffect(() => {
+    load()
+  }, [])
 
-export const fetchPost = async (id) => {
-  const res = await fetch(`${API_BASE}/${id}`, {
-    mode: 'cors'
-  })
-  return handleResponse(res)
-}
+  const handleCreate = async (payload) => {
+    try {
+      const saved = await createPost(payload)
+      if (saved && saved.id != null) {
+        setPosts(prev => [saved, ...prev])
+      } else {
+        alert('Invalid post returned from API')
+      }
+    } catch (err) {
+      alert('Create failed: ' + (err.message || err))
+    }
+  }
 
-export const createPost = async (post) => {
-  const res = await fetch(API_BASE, {
-    method: 'POST',
-    mode: 'cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(post)
-  })
-  return handleResponse(res)
-}
+  const handleUpdate = async (id, payload) => {
+    try {
+      const saved = await updatePost(id, payload)
+      if (saved && saved.id != null) {
+        setPosts(prev => prev.map(p => (p && p.id === id ? saved : p)))
+        setEditing(null)
+      } else {
+        alert('Invalid post returned from API')
+      }
+    } catch (err) {
+      alert('Update failed: ' + (err.message || err))
+    }
+  }
 
-export const updatePost = async (id, post) => {
-  const res = await fetch(`${API_BASE}/${id}`, {
-    method: 'PUT',
-    mode: 'cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(post)
-  })
-  return handleResponse(res)
-}
+  const handlePatch = async (id, partial) => {
+    try {
+      const saved = await patchPost(id, partial)
+      if (saved && saved.id != null) {
+        setPosts(prev => prev.map(p => (p && p.id === id ? saved : p)))
+      } else {
+        alert('Invalid post returned from API')
+      }
+    } catch (err) {
+      alert('Patch failed: ' + (err.message || err))
+    }
+  }
 
-export const patchPost = async (id, partial) => {
-  const res = await fetch(`${API_BASE}/${id}`, {
-    method: 'PATCH',
-    mode: 'cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(partial)
-  })
-  return handleResponse(res)
-}
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this post?')) return
+    try {
+      await deletePost(id)
+      setPosts(prev => prev.filter(p => p && p.id !== id))
+    } catch (err) {
+      alert('Failed to delete: ' + (err.message || err))
+    }
+  }
 
-export const deletePost = async (id) => {
-  const res = await fetch(`${API_BASE}/${id}`, {
-    method: 'DELETE',
-    mode: 'cors'
-  })
-  return handleResponse(res)
+  return (
+    <div className="app">
+      <header>
+        <h1>Posts</h1>
+      </header>
+
+      <main>
+        <section className="create">
+          <h2>Create a post</h2>
+          <PostForm
+            onSubmit={async (values, reset) => {
+              await handleCreate(values)
+              reset()
+            }}
+          />
+        </section>
+
+        <section className="list">
+          <h2>All posts</h2>
+          {loading && <div className="muted">Loading...</div>}
+          {error && <div className="error">Error: {error}</div>}
+
+          <PostList
+            posts={posts || []}
+            onEdit={(post) => post && setEditing(post)}
+            onPatch={handlePatch}
+            onDelete={handleDelete}
+          />
+
+          {editing && (
+            <div className="modal">
+              <div className="modal-content">
+                <h3>Edit post</h3>
+                <PostForm
+                  initial={editing}
+                  onSubmit={async (values) => {
+                    if (!editing || editing.id == null) return
+                    await handleUpdate(editing.id, values)
+                  }}
+                  onCancel={() => setEditing(null)}
+                />
+              </div>
+            </div>
+          )}
+        </section>
+      </main>
+
+      <footer>
+        <small>UI built with Vite + React — talks to /api/posts</small>
+      </footer>
+    </div>
+  )
 }
