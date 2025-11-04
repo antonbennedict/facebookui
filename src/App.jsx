@@ -4,8 +4,7 @@ import {
   createPost,
   updatePost,
   patchPost,
-  deletePost,
-  API_URL
+  deletePost
 } from './api'
 import PostList from './components/PostList'
 import PostForm from './components/PostForm'
@@ -14,13 +13,14 @@ export default function App() {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [editing, setEditing] = useState(null)
+  const [editing, setEditing] = useState(null) // post being edited
 
   const load = async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchPosts(API_URL)
+      const data = await fetchPosts()
+      // ensure descending by createdAt
       data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       setPosts(data)
     } catch (err) {
@@ -36,7 +36,7 @@ export default function App() {
 
   const handleCreate = async (payload) => {
     try {
-      const saved = await createPost(API_URL, payload)
+      const saved = await createPost(payload)
       setPosts(prev => [saved, ...prev])
     } catch (err) {
       throw err
@@ -45,7 +45,7 @@ export default function App() {
 
   const handleUpdate = async (id, payload) => {
     try {
-      const saved = await updatePost(API_URL, id, payload)
+      const saved = await updatePost(id, payload)
       setPosts(prev => prev.map(p => (p.id === id ? saved : p)))
       setEditing(null)
     } catch (err) {
@@ -55,7 +55,7 @@ export default function App() {
 
   const handlePatch = async (id, partial) => {
     try {
-      const saved = await patchPost(API_URL, id, partial)
+      const saved = await patchPost(id, partial)
       setPosts(prev => prev.map(p => (p.id === id ? saved : p)))
     } catch (err) {
       throw err
@@ -65,7 +65,7 @@ export default function App() {
   const handleDelete = async (id) => {
     if (!confirm('Delete this post?')) return
     try {
-      await deletePost(API_URL, id)
+      await deletePost(id)
       setPosts(prev => prev.filter(p => p.id !== id))
     } catch (err) {
       alert('Failed to delete: ' + (err.message || err))
@@ -127,7 +127,7 @@ export default function App() {
       </main>
 
       <footer>
-        <small>UI built with Vite + React — talks to API</small>
+        <small>UI built with Vite + React — talks to /api/posts</small>
       </footer>
     </div>
   )
