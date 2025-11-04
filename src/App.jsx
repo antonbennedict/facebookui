@@ -15,7 +15,6 @@ export default function App() {
   const [error, setError] = useState(null)
   const [editing, setEditing] = useState(null) // post being edited
 
-  // Load all posts
   const load = async () => {
     setLoading(true)
     setError(null)
@@ -35,25 +34,15 @@ export default function App() {
     load()
   }, [])
 
-  // Create a new post
   const handleCreate = async (payload) => {
     try {
       const saved = await createPost(payload)
-      // ensure saved has id and timestamps for UI rendering
-      const postWithId = {
-        id: saved.id || Date.now().toString(),
-        createdAt: saved.createdAt || new Date().toISOString(),
-        modifiedAt: saved.modifiedAt || new Date().toISOString(),
-        liked: saved.liked || false,
-        ...saved
-      }
-      setPosts(prev => [postWithId, ...prev])
+      setPosts(prev => [saved, ...prev])
     } catch (err) {
       throw err
     }
   }
 
-  // Update a post
   const handleUpdate = async (id, payload) => {
     try {
       const saved = await updatePost(id, payload)
@@ -64,7 +53,6 @@ export default function App() {
     }
   }
 
-  // Patch a post (like toggle)
   const handlePatch = async (id, partial) => {
     try {
       const saved = await patchPost(id, partial)
@@ -74,7 +62,6 @@ export default function App() {
     }
   }
 
-  // Delete a post
   const handleDelete = async (id) => {
     if (!confirm('Delete this post?')) return
     try {
